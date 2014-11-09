@@ -88,7 +88,7 @@ LOCAL_SRC_FILES:= \
 ifeq ($(TARGET_ARCH),mips)
 LOCAL_CFLAGS += -DALIGN_DOUBLE
 endif
-LOCAL_CFLAGS += -Werror
+LOCAL_CFLAGS += -Werror -Wno-error=unused-variable -Wno-error=unused-parameter
 
 LOCAL_C_INCLUDES += \
 		bionic/libc \
@@ -117,7 +117,7 @@ LOCAL_SHARED_LIBRARIES := \
         libcutils \
         libdl \
         liblog
-LOCAL_CFLAGS := -Werror
+LOCAL_CFLAGS := -Werror -Wno-error=unused-variable -Wno-error=unused-parameter
 
 include external/stlport/libstlport.mk
 
