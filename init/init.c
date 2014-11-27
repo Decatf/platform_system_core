@@ -1028,6 +1028,7 @@ int main(int argc, char **argv)
     int signal_fd_init = 0;
     int keychord_fd_init = 0;
     bool is_charger = false;
+    bool is_lpm_charger = false;
 
     if (!strcmp(basename(argv[0]), "ueventd"))
         return ueventd_main(argc, argv);
@@ -1087,7 +1088,8 @@ int main(int argc, char **argv)
     restorecon("/dev/__properties__");
     restorecon_recursive("/sys");
 
-    is_charger = !strcmp(bootmode, "charger") || charging_mode_booting();
+    is_charger = !strcmp(bootmode, "charger");
+    is_lpm_charger = charging_mode_booting();
 
     INFO("property init\n");
     property_load_boot_defaults();
@@ -1102,8 +1104,13 @@ int main(int argc, char **argv)
     queue_builtin_action(keychord_init_action, "keychord_init");
     queue_builtin_action(console_init_action, "console_init");
 
-    /* execute all the boot actions to get us started */
-    action_for_each_trigger("init", action_add_queue_tail);
+    if (is_lpm_charger) {
+        /* execute the actions to enter lpm charger mode */
+        action_for_each_trigger("lpm-init", action_add_queue_tail);
+    } else {
+        /* execute all the boot actions to get us started */
+        action_for_each_trigger("init", action_add_queue_tail);
+    }
 
     /* Repeat mix_hwrng_into_linux_rng in case /dev/hw_random or /dev/random
      * wasn't ready immediately after wait_for_coldboot_done
@@ -1112,16 +1119,18 @@ int main(int argc, char **argv)
     queue_builtin_action(property_service_init_action, "property_service_init");
     queue_builtin_action(signal_init_action, "signal_init");
 
-    /* Don't mount filesystems or start core system services if in charger mode. */
-    if (is_charger) {
-        action_for_each_trigger("charger", action_add_queue_tail);
-    } else {
-        action_for_each_trigger("late-init", action_add_queue_tail);
+
+    if (!is_lpm_charger) {
+        /* Don't mount filesystems or start core system services if in charger mode. */
+        if (is_charger) {
+            action_for_each_trigger("charger", action_add_queue_tail);
+        } else {
+            action_for_each_trigger("late-init", action_add_queue_tail);
+        }
+
+        /* run all property triggers based on current state of the properties */
+        queue_builtin_action(queue_property_triggers_action, "queue_property_triggers");
     }
-
-    /* run all property triggers based on current state of the properties */
-    queue_builtin_action(queue_property_triggers_action, "queue_property_triggers");
-
 
 #if BOOTCHART
     queue_builtin_action(bootchart_init_action, "bootchart_init");
