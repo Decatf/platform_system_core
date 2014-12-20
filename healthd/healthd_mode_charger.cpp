@@ -89,6 +89,12 @@ char *locale;
 #define CHARGING_ENABLED_PATH   "/sys/class/power_supply/battery/charging_enabled"
 #endif
 
+#ifdef CHARGER_DISABLE_ADBD
+#define USB_ENABLE_PATH   "/sys/class/android_usb/android0/enable"
+#define USB_DEVICE_PATH   "/sys/class/android_usb/android0/bDeviceClass"
+#define USB_FUNCTIONS_PATH   "/sys/class/android_usb/android0/functions"
+#endif
+
 #define LOGE(x...) do { KLOG_ERROR("charger", x); } while (0)
 #define LOGI(x...) do { KLOG_INFO("charger", x); } while (0)
 #define LOGV(x...) do { KLOG_DEBUG("charger", x); } while (0)
@@ -412,6 +418,21 @@ static int read_file_int(const char *path, int *val)
 err:
     return -1;
 }
+
+#ifdef CHARGER_DISABLE_ADBD
+static int write_file(const char *path, char *buf, size_t sz)
+{
+    int fd;
+    size_t cnt;
+
+    fd = open(path, O_WRONLY, 0);
+    if (fd < 0)
+        return -1;
+
+    cnt = write(fd, buf, sz - 1);
+    return cnt;
+}
+#endif
 
 static int get_battery_capacity()
 {
@@ -952,4 +973,12 @@ void healthd_mode_charger_init(struct healthd_config* /*config*/)
     charger->next_screen_transition = -1;
     charger->next_key_check = -1;
     charger->next_pwr_check = -1;
+
+#ifdef CHARGER_DISABLE_ADBD
+    const char* disable = "0";
+    const char* none = "none";
+    write_file(USB_ENABLE_PATH, (char*) disable, sizeof(disable));
+    write_file(USB_FUNCTIONS_PATH, (char*) none, sizeof(none));
+    write_file(USB_DEVICE_PATH, (char*) disable, sizeof(disable));
+#endif
 }

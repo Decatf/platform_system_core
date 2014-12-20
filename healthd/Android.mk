@@ -55,6 +55,10 @@ ifeq ($(strip $(BOARD_CHARGER_ENABLE_SUSPEND)),true)
 LOCAL_STATIC_LIBRARIES += libsuspend
 endif
 
+ifeq ($(strip $(BOARD_CHARGER_DISABLE_ADBD)),true)
+LOCAL_CFLAGS += -DCHARGER_DISABLE_ADBD
+endif
+
 LOCAL_HAL_STATIC_LIBRARIES := libhealthd
 
 # Symlink /charger to /sbin/healthd
