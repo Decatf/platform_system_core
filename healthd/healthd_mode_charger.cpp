@@ -274,7 +274,7 @@ static int set_backlight_on(void)
 
     if (access(BACKLIGHT_PATH, R_OK | W_OK) != 0)
     {
-        LOGI("Backlight control not support\n");
+        LOGW("Backlight control not support\n");
         return 0;
     }
 
@@ -357,9 +357,9 @@ static void dump_last_kmsg(void)
     free(buf);
 
 out:
-    LOGI("\n");
-    LOGI("************* END LAST KMSG *************\n");
-    LOGI("\n");
+    LOGW("\n");
+    LOGW("************* END LAST KMSG *************\n");
+    LOGW("\n");
 }
 
 static int read_file(const char *path, char *buf, size_t sz)
@@ -891,7 +891,7 @@ static void charger_event_handler(uint32_t /*epevents*/)
         ev_dispatch();
 }
 
-void healthd_mode_charger_init(struct healthd_config* /*config*/)
+void healthd_mode_charger_init(struct healthd_config* config)
 {
     int ret;
     int charging_enabled = 1;
@@ -901,14 +901,14 @@ void healthd_mode_charger_init(struct healthd_config* /*config*/)
 
     dump_last_kmsg();
 
-    LOGI("--------------- STARTING CHARGER MODE ---------------\n");
+    LOGW("--------------- STARTING CHARGER MODE ---------------\n");
 
     if (mode == NORMAL) {
         /* check the charging is enabled or not */
         ret = read_file_int(CHARGING_ENABLED_PATH, &charging_enabled);
         if (!ret && !charging_enabled) {
             /* if charging is disabled, reboot and exit power off charging */
-            LOGI("android charging is disabled, exit!\n");
+            LOGW("android charging is disabled, exit!\n");
             android_reboot(ANDROID_RB_RESTART, 0, 0);
         }
     }
