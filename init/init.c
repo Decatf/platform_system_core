@@ -927,6 +927,7 @@ static bool selinux_is_enforcing(void)
     }
 
 #endif
+
     return true;
 }
 
@@ -994,8 +995,9 @@ static void selinux_initialize(void)
 
     selinux_init_all_handles();
     bool is_enforcing = selinux_is_enforcing();
-    INFO("SELinux: security_setenforce(%d)\n", is_enforcing);
-    security_setenforce(is_enforcing);
+    // bool is_enforcing = false;
+    // INFO("SELinux: security_setenforce(%d)\n", is_enforcing);
+    // security_setenforce(is_enforcing);
 }
 
 int main(int argc, char **argv)
@@ -1009,6 +1011,7 @@ int main(int argc, char **argv)
     int signal_fd_init = 0;
     int keychord_fd_init = 0;
     bool is_charger = false;
+    char tmp_prop[PROP_VALUE_MAX];
 
     if (!strcmp(basename(argv[0]), "ueventd"))
         return ueventd_main(argc, argv);
@@ -1093,6 +1096,19 @@ int main(int argc, char **argv)
     queue_builtin_action(property_service_init_action, "property_service_init");
     queue_builtin_action(signal_init_action, "signal_init");
 
+
+    /* set SELinux here because the default.prop is not loaded earlier */
+    if (property_get("ro.boot.selinux", tmp_prop) == 0) {
+        ERROR("ro.boot.selinux is not set\n");
+    }
+    if (strcmp(tmp_prop, "permissive") == 0) {
+        ERROR("SELinux: ro.boot.selinux. permissive\n");
+        security_setenforce(false);
+    } else if (strcmp(tmp_prop, "enforcing") == 0) {
+        ERROR("SELinux: ro.boot.selinux. enforcing\n");
+        security_setenforce(true);
+    }
+
     /* Don't mount filesystems or start core system services if in charger mode. */
     if (is_charger) {
         action_for_each_trigger("charger", action_add_queue_tail);
@@ -1102,7 +1118,6 @@ int main(int argc, char **argv)
 
     /* run all property triggers based on current state of the properties */
     queue_builtin_action(queue_property_triggers_action, "queue_property_triggers");
-
 
 #if BOOTCHART
     queue_builtin_action(bootchart_init_action, "bootchart_init");
