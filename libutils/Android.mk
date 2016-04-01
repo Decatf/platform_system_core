@@ -94,6 +94,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_MODULE:= libutils
 LOCAL_C_INCLUDES += external/safe-iop/include
+LOCAL_CLANG := false
 include $(BUILD_STATIC_LIBRARY)
 
 # For the device, shared
@@ -108,6 +109,7 @@ LOCAL_SHARED_LIBRARIES := \
         liblog
 LOCAL_CFLAGS := -Werror
 LOCAL_C_INCLUDES += external/safe-iop/include
+LOCAL_CLANG := false
 
 include $(BUILD_SHARED_LIBRARY)
 
