@@ -72,7 +72,8 @@ LOCAL_SRC_FILES:= \
 ifeq ($(TARGET_ARCH),mips)
 LOCAL_CFLAGS += -DALIGN_DOUBLE
 endif
-LOCAL_CFLAGS += -Werror -fvisibility=protected
+#LOCAL_CFLAGS += -Werror -fvisibility=protected
+LOCAL_CFLAGS += -fvisibility=protected
 
 LOCAL_STATIC_LIBRARIES := \
 	libcutils \
@@ -84,8 +85,8 @@ LOCAL_SHARED_LIBRARIES := \
         libdl
 
 LOCAL_MODULE := libutils
-LOCAL_CLANG := true
-LOCAL_SANITIZE := integer
+LOCAL_CLANG := false
+# LOCAL_SANITIZE := integer
 LOCAL_C_INCLUDES += external/safe-iop/include
 include $(BUILD_STATIC_LIBRARY)
 
@@ -99,11 +100,11 @@ LOCAL_SHARED_LIBRARIES := \
         libcutils \
         libdl \
         liblog
-LOCAL_CFLAGS := -Werror
+# LOCAL_CFLAGS := -Werror
 LOCAL_C_INCLUDES += external/safe-iop/include
 
-LOCAL_CLANG := true
-LOCAL_SANITIZE := integer
+LOCAL_CLANG := false
+# LOCAL_SANITIZE := integer
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
