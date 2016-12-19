@@ -327,8 +327,12 @@ bool Subprocess::ForkAndExec(std::string* error) {
 
         if (command_.empty()) {
             execle(_PATH_BSHELL, _PATH_BSHELL, "-", nullptr, cenv.data());
+            if (errno == ENOENT)
+                execle(_PATH_BSHELL2, _PATH_BSHELL2, "-", nullptr, cenv.data());
         } else {
             execle(_PATH_BSHELL, _PATH_BSHELL, "-c", command_.c_str(), nullptr, cenv.data());
+            if (errno == ENOENT)
+                execle(_PATH_BSHELL2, _PATH_BSHELL2, "-c", command_.c_str(), nullptr, cenv.data());
         }
         WriteFdExactly(child_error_sfd, "exec '" _PATH_BSHELL "' failed: ");
         WriteFdExactly(child_error_sfd, strerror(errno));
