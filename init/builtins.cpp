@@ -134,6 +134,8 @@ static void turnOffBacklight() {
                                                            dp->d_name);
         android::base::WriteStringToFile(off, fileName);
     }
+
+    android::base::WriteStringToFile(off, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
 }
 
 static int wipe_data_via_recovery(const std::string& reason) {
