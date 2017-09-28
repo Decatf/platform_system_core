@@ -153,6 +153,8 @@ static void TurnOffBacklight() {
         std::string fileName = StringPrintf("%s/%s/brightness", backlightDir, dp->d_name);
         android::base::WriteStringToFile(OFF, fileName);
     }
+
+    android::base::WriteStringToFile(OFF, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
 }
 
 static void ShutdownVold() {
