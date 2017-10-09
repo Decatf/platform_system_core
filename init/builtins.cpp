@@ -148,6 +148,12 @@ static void TurnOffTegraCpufreq() {
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
     usleep(1000*1000);
 }
+
+static void TurnOffTegraI2cDvc() {
+    static constexpr char POWEROFF[] = "1";
+    android::base::WriteStringToFile(POWEROFF, "/sys/devices/soc0/7000d000.i2c/poweroff_dvc");
+    usleep(1000*1000);
+}
 #endif
 
 static int wipe_data_via_recovery(const std::string& reason) {
@@ -198,6 +204,7 @@ static void unmount_and_fsck(const struct mntent *entry) {
 
     turnOffBacklight();
     TurnOffTegraCpufreq();
+    TurnOffTegraI2cDvc();
 
     int count = 0;
     while (count++ < UNMOUNT_CHECK_TIMES) {
