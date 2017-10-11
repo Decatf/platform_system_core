@@ -113,30 +113,30 @@ done:
 #ifndef UMOUNT_AND_FSCK_IS_UNSAFE
 // Turn off backlight while we are performing power down cleanup activities.
 static void turnOffBacklight() {
-    static const char off[] = "0";
+    // static const char off[] = "0";
 
-    android::base::WriteStringToFile(off, "/sys/class/leds/lcd-backlight/brightness");
+    // android::base::WriteStringToFile(off, "/sys/class/leds/lcd-backlight/brightness");
 
-    static const char backlightDir[] = "/sys/class/backlight";
-    std::unique_ptr<DIR, int(*)(DIR*)> dir(opendir(backlightDir), closedir);
-    if (!dir) {
-        return;
-    }
+    // static const char backlightDir[] = "/sys/class/backlight";
+    // std::unique_ptr<DIR, int(*)(DIR*)> dir(opendir(backlightDir), closedir);
+    // if (!dir) {
+    //     return;
+    // }
 
-    struct dirent *dp;
-    while ((dp = readdir(dir.get())) != NULL) {
-        if (((dp->d_type != DT_DIR) && (dp->d_type != DT_LNK)) ||
-                (dp->d_name[0] == '.')) {
-            continue;
-        }
+    // struct dirent *dp;
+    // while ((dp = readdir(dir.get())) != NULL) {
+    //     if (((dp->d_type != DT_DIR) && (dp->d_type != DT_LNK)) ||
+    //             (dp->d_name[0] == '.')) {
+    //         continue;
+    //     }
 
-        std::string fileName = android::base::StringPrintf("%s/%s/brightness",
-                                                           backlightDir,
-                                                           dp->d_name);
-        android::base::WriteStringToFile(off, fileName);
-    }
+    //     std::string fileName = android::base::StringPrintf("%s/%s/brightness",
+    //                                                        backlightDir,
+    //                                                        dp->d_name);
+    //     android::base::WriteStringToFile(off, fileName);
+    // }
 
-    android::base::WriteStringToFile(off, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
+    // android::base::WriteStringToFile(off, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
 }
 
 static void TurnOffTegraCpufreq() {
@@ -146,6 +146,8 @@ static void TurnOffTegraCpufreq() {
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
     android::base::WriteStringToFile("1000000",
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+    android::base::WriteStringToFile("0",
+        "/sys/devices/system/cpu/cpu1/online");
     usleep(1000*1000);
 }
 
@@ -154,6 +156,16 @@ static void TurnOffTegraI2cDvc() {
     android::base::WriteStringToFile(POWEROFF, "/sys/devices/soc0/7000d000.i2c/poweroff_dvc");
     usleep(1000*1000);
 }
+
+static void turnOffWifi() {
+    const char *rmmod_argv[] = {
+        "/system/bin/rmmod", "dhd",
+    };
+    int st;
+    android_fork_execvp_ext(ARRAY_SIZE(rmmod_argv), (char **)rmmod_argv,
+                            &st, true, LOG_KLOG, true, NULL, NULL, 0);
+}
+
 #endif
 
 static int wipe_data_via_recovery(const std::string& reason) {
@@ -203,8 +215,6 @@ static void unmount_and_fsck(const struct mntent *entry) {
     }
 
     turnOffBacklight();
-    TurnOffTegraCpufreq();
-    TurnOffTegraI2cDvc();
 
     int count = 0;
     while (count++ < UNMOUNT_CHECK_TIMES) {
@@ -733,6 +743,10 @@ static int do_powerctl(const std::vector<std::string>& args) {
         ERROR("powerctl: unrecognized command '%s'\n", command);
         return -EINVAL;
     }
+
+    turnOffWifi();
+    TurnOffTegraCpufreq();
+    TurnOffTegraI2cDvc();
 
     if (command[len] == ',') {
         if (cmd == ANDROID_RB_POWEROFF &&
