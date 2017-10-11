@@ -138,16 +138,6 @@ static void turnOffBacklight() {
 
     android::base::WriteStringToFile(off, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
 }
-
-static void TurnOffTegraCpufreq() {
-    android::base::WriteStringToFile("userspace",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-    android::base::WriteStringToFile("1000000",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
-    android::base::WriteStringToFile("1000000",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
-    usleep(1000*1000);
-}
 #endif
 
 static int wipe_data_via_recovery(const std::string& reason) {
@@ -197,7 +187,6 @@ static void unmount_and_fsck(const struct mntent *entry) {
     }
 
     turnOffBacklight();
-    TurnOffTegraCpufreq();
 
     int count = 0;
     while (count++ < UNMOUNT_CHECK_TIMES) {
