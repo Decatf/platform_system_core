@@ -138,28 +138,6 @@ static void turnOffBacklight() {
     android::base::WriteStringToFile(off, "/sys/devices/virtual/mdnie/mdnie/lcd_power");
 }
 
-static void turnOffWifiAndHotplugCpu() {
-
-    const int msPerUs = 1000;
-    const char *rmmod_argv[] = {
-        "/system/bin/rmmod", "dhd",
-    };
-    int st;
-    android_fork_execvp_ext(ARRAY_SIZE(rmmod_argv), (char **)rmmod_argv,
-                            &st, true, LOG_KLOG, true, NULL, NULL, 0);
-    usleep(1000*msPerUs);
-
-    android::base::WriteStringToFile("userspace",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-    android::base::WriteStringToFile("1000000",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq");
-    android::base::WriteStringToFile("1000000",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
-    android::base::WriteStringToFile("0",
-        "/sys/devices/system/cpu/cpu1/online");
-    usleep(1000*msPerUs);
-}
-
 static int wipe_data_via_recovery(const std::string& reason) {
     const std::vector<std::string> options = {"--wipe_data", std::string() + "--reason=" + reason};
     std::string err;
@@ -733,8 +711,6 @@ static int do_powerctl(const std::vector<std::string>& args) {
         ERROR("powerctl: unrecognized command '%s'\n", command);
         return -EINVAL;
     }
-
-    turnOffWifiAndHotplugCpu();
 
     if (command[len] == ',') {
         if (cmd == ANDROID_RB_POWEROFF &&
